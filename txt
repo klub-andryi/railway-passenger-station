@@ -1,8 +1,20 @@
-auto dispatcher = std::make_shared<Dispatcher>(generateId(), "Inna", SEX(SEX::FEMALE), Date(1975, 12, 15), Date(2001, 1, 5), 1, 35500.0);
+#include <windows.h>
+#include "services/services.hpp"
+#include "ui/menu.hpp"
+
+#include "data/loaders/link-loader.hpp"
+#include "data/loaders/entity-loader.hpp"
+#include "common/utils/generate-id.hpp"
+
+int main()
+{
+    SetConsoleOutputCP(CP_UTF8);
+
+    auto dispatcher = std::make_shared<Dispatcher>(generateId(), "Inna", SEX(SEX::FEMALE), Date(1975, 12, 15), Date(2001, 1, 5), 1, 35500.0);
     auto cashier = std::make_shared<Cashier>(generateId(), "Maria", SEX(SEX::FEMALE), Date(1980, 12, 15), Date(2001, 1, 5), 1, 35500.0);
 
     auto head = std::make_shared<HeadDepartment>(generateId(), "Anna", SEX(SEX::FEMALE), Date(1974, 12, 15), Date(2001, 1, 5), 1, 35500.0);
-    auto department = std::make_shared<Department>("#dpm-0021", "Main Department");
+    auto department = std::make_shared<Department>(generateId(), "Main Department");
 
     auto driver1 = std::make_shared<Driver>(generateId(), "Taras", SEX(SEX::MALE), Date(1982, 5, 12), Date(2008, 9, 10), 2, 24800.0, std::vector<Date>{Date(2023, 6, 3, 7, 15)});
     auto driver2 = std::make_shared<Driver>(generateId(), "Vasyl", SEX(SEX::MALE), Date(1987, 11, 23), Date(2011, 12, 2), 2, 26500.0, std::vector<Date>{Date(2023, 8, 12, 6, 45)});
@@ -82,15 +94,15 @@ auto dispatcher = std::make_shared<Dispatcher>(generateId(), "Inna", SEX(SEX::FE
 
     auto routeDniproKyiv = std::make_shared<Route>(generateId(), "Dnipro-Kyiv", TypeRoute(TypeRoute::Domestic));
     auto tripMorning1 = std::make_shared<Trip>(generateId(), "Dnipro-Kyiv Morning", Date(2025, 7, 1, 6, 40), Date(0, 20), TripStatus(Status::Delayed, "delayed due to bad weather conditions", Date(1, 10)));
-    auto tripEvening1 = std::make_shared<Trip>(generateId(), "Dnipro-Kyiv Evening", Date(2025, 7, 1, 18, 30), Date(0, 15), TripStatus());
+    auto tripEvening1 = std::make_shared<Trip>(generateId(), "Dnipro-Kyiv Evening", Date(2025, 7, 1, 18, 30), Date(0, 15));
 
     auto routeKyivIvanoFronkivsk = std::make_shared<Route>(generateId(), "Kyiv-Ivano-Frankivsk", TypeRoute(TypeRoute::Tourist));
-    auto tripMorning2 = std::make_shared<Trip>(generateId(), "Kyiv-Ivano-Frankivsk Morning", Date(2025, 6, 17, 7, 00), Date(0, 15), TripStatus(Status::Canceled, "air alarm"));
-    auto tripEvening2 = std::make_shared<Trip>(generateId(), "Kyiv-Ivano-Frankivsk Evening", Date(2025, 6, 17, 19, 30), Date(0, 15), TripStatus());
+    auto tripMorning2 = std::make_shared<Trip>(generateId(), "Kyiv-Ivano-Frankivsk Morning", Date(2025, 6, 17, 7, 00), Date(0, 15), TripStatus(Status::Active, "good"));
+    auto tripEvening2 = std::make_shared<Trip>(generateId(), "Kyiv-Ivano-Frankivsk Evening", Date(2025, 6, 17, 19, 30), Date(0, 10));
 
     auto routeOdesaKrakiv = std::make_shared<Route>(generateId(), "Odesa-Krakiv", TypeRoute(TypeRoute::International));
-    auto tripMorning3 = std::make_shared<Trip>(generateId(), "Odesa-Krakiv Morning", Date(2025, 8, 28, 5, 00), Date(0, 15), TripStatus(Status::Delayed, "delayed due to bad weather conditions", Date(2, 0)));
-    auto tripEvening3 = std::make_shared<Trip>(generateId(), "Odesa-Krakiv Evening", Date(2025, 8, 28, 18, 00), Date(0, 15), TripStatus());
+    auto tripMorning3 = std::make_shared<Trip>(generateId(), "Odesa-Krakiv Morning", Date(2025, 8, 28, 5, 00), Date(0, 15), TripStatus(Status::Canceled, "air alarm", Date(0, 0)));
+    auto tripEvening3 = std::make_shared<Trip>(generateId(), "Odesa-Krakiv Evening", Date(2025, 8, 28, 18, 00), Date(0, 15));
 
     auto train1 = std::make_shared<Train>(generateId(), TrainType(TrainType::PASSANGERS));
     auto train2 = std::make_shared<Train>(generateId(), TrainType(TrainType::FAST));
@@ -229,12 +241,21 @@ auto dispatcher = std::make_shared<Dispatcher>(generateId(), "Inna", SEX(SEX::FE
     route_to_trips.link(routeOdesaKrakiv, tripEvening3);
 
     OneToMany<Locomotive, Trip> locomotives_to_trips;
-    locomotives_to_trips.link(loco1, tripMorning1);
-    locomotives_to_trips.link(loco2, tripEvening1);
-    locomotives_to_trips.link(loco3, tripMorning2);
-    locomotives_to_trips.link(loco4, tripEvening2);
-    locomotives_to_trips.link(loco5, tripMorning3);
-    locomotives_to_trips.link(loco5, tripEvening3);
+    locomotives_to_trips.link(loco1, tripMorning3);
+    locomotives_to_trips.link(loco1, tripEvening2);
+
+    locomotives_to_trips.link(loco2, tripMorning2);
+    locomotives_to_trips.link(loco2, tripEvening2);
+
+    locomotives_to_trips.link(loco3, tripMorning1);
+    locomotives_to_trips.link(loco3, tripEvening1);
+
+    locomotives_to_trips.link(loco4, tripMorning3);
+    locomotives_to_trips.link(loco4, tripEvening3);
+
+    locomotives_to_trips.link(loco5, tripMorning1);
+    locomotives_to_trips.link(loco5, tripEvening1);
+    
 
     OneToMany<Train, Locomotive> trains_to_locomotive;
     trains_to_locomotive.link(train1, loco1);
@@ -310,3 +331,7 @@ auto dispatcher = std::make_shared<Dispatcher>(generateId(), "Inna", SEX(SEX::FE
     saveLinks(trains_to_locomotive);
     saveLinks(trip_to_tickets);
     saveLinks(ticket_to_passenger);
+
+    return 0;
+    
+}

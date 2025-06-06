@@ -180,7 +180,7 @@ std::vector<std::shared_ptr<Employee>> Services::getEmployeesByExp(int exp) cons
     std::vector<std::shared_ptr<Employee>> employees;
     for (const auto &employee : all_employees)
     {
-        if (Date::differenceInYears(employee->getStartWork(), Date()) == exp)
+        if (Date::differenceInYears(Date(), employee->getStartWork()) == exp)
             employees.push_back(employee);
     }
     return employees;
@@ -230,8 +230,10 @@ std::vector<std::shared_ptr<Employee>> Services::getEmployeesByHasChild(bool is_
     std::vector<std::shared_ptr<Employee>> employees;
     for (const auto &employee : all_employees)
     {
-        if ((employee->getChildrenCount() > 0) && is_has_child)
+        if ((employee->getChildrenCount() > 0) == is_has_child)
+        {
             employees.push_back(employee);
+        }
     }
     return employees;
 }
@@ -475,18 +477,21 @@ Services::getLocomotivesAtStationInTime(
             }
             auto locomotives = locomotives_to_trips.getLinkedA(trip);
 
+
             for (const auto &loco : locomotives)
             {
                 auto train = train_to_locomotive.getLinkedA(loco);
                 auto start_station = station_to_locomotives.getLinkedA(loco);
 
                 int start_index = findStationIndex(stations, start_station->getId());
+
+
                 if (start_index == -1)
                     continue;
 
                 if (start_station->getId() == id)
                 {
-                    if (Date::differenceInMinutes(departure_time, time) == 0)
+                    if (Date::differenceInMinutes(departure_time, time) <= 1)
                     {
                         result.push_back(loco);
                     }
@@ -497,7 +502,7 @@ Services::getLocomotivesAtStationInTime(
                 Date arrival_time = calculateArrivalTime(
                     departure_time, stations, start_index, id, speed, *trip);
 
-                if (Date::differenceInMinutes(arrival_time, time) == 0)
+                if (Date::differenceInMinutes(arrival_time, time) <= 1)
                 {
                     result.push_back(loco);
                 }
@@ -716,11 +721,11 @@ std::vector<std::shared_ptr<Train>> Services::getTrainsByRouteDistance(
     {
         const auto &stations = routes_to_stations.getLinkedB(route);
         double dist = 0;
-        for (size_t i = 0; i + 1 < stations.size(); ++i)
+        for (size_t i = 0; i < stations.size() - 1; ++i)
         {
             dist += Math::getDistanceBetweenPointsKm(stations[i]->getPosition(), stations[i + 1]->getPosition());
         }
-        if (dist == distance)
+        if (fabs(dist - distance) < 1)
         {
             matching_routes.push_back(route);
         }

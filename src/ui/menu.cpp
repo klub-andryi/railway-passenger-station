@@ -66,14 +66,16 @@ void Menu::showMainMenu() const {
     std::cout << "43. Отримати перелік і загальне число пасажирів які виїхали в зазначений день\n";
     std::cout << "44. Отримати перелік і загальне число пасажирів які виїхали за кордон у зазначений день\n";
     std::cout << "45. Отримати перелік і загальне число пасажирів які за ознакою здачі речей в багажне відділення\n";
+    std::cout << "46. Отримати перелік і загальне число пасажирів за статевою ознакою\n";
+    std::cout << "47. Отримати перелік і загальне число пасажирів за віком\n";
     
-    std::cout << "46. Отримати перелік і загальне число невикуплених квитків на зазначеному рейсі\n";
-    std::cout << "47. Отримати перелік і загальне число невикуплених квитків на зазначеному маршруті\n";
-    std::cout << "48. Отримати перелік і загальне число невикуплених квитків в зазначену дату\n";
+    std::cout << "48. Отримати перелік і загальне число невикуплених квитків на зазначеному рейсі\n";
+    std::cout << "49. Отримати перелік і загальне число невикуплених квитків на зазначеному маршруті\n";
+    std::cout << "50. Отримати перелік і загальне число невикуплених квитків в зазначену дату\n";
     
-    std::cout << "49. Отримати загальне число зданих квитків на вказаний рейс\n";
-    std::cout << "50. Отримати загальне число зданих квитків на вказану дату\n";
-    std::cout << "51. Отримати загальне число зданих квитків на вказаний маршрут\n";
+    std::cout << "51. Отримати загальне число зданих квитків на вказаний рейс\n";
+    std::cout << "52. Отримати загальне число зданих квитків на вказану дату\n";
+    std::cout << "53. Отримати загальне число зданих квитків на вказаний маршрут\n";
 
     std::cout << "Ваш вибір: ";
 }
@@ -232,24 +234,30 @@ void Menu::handleUserChoice() const {
         case 45:
             getPassengersByHasBaggageCommand();
             break; 
-
         case 46:
+            getPassengersBySexCommand();
+            break; 
+        case 47:
+            getPassengersByAgeCommand();
+            break; 
+
+        case 48:
             getUnredeemedTicketByTripCommand();
             break;
-        case 47:
+        case 49:
             getUnredeemedTicketByRouteCommand();
             break;
-        case 48:
+        case 50:
             getUnredeemedTicketByDateCommand();
             break;
             
-        case 49:
+        case 51:
             getReturnedTicketsByTripCommand();
             break;
-        case 50:
+        case 52:
             getReturnedTicketsByDateCommand();
             break;
-        case 51:
+        case 53:
             getReturnedTicketsByRouteCommand();
             break;
 
@@ -567,7 +575,7 @@ void Menu::getTrainsByRouteDistanceCommand() const {
 }
 void Menu::getTrainsByticketPriceCommand() const {
     double price;
-    std::cout << "Введіть дистанцію маршруту: ";
+    std::cout << "Введіть ціну квитка: ";
     std::cin >> price;
 
     auto trains = services.getTrainsByticketPrice(price);
@@ -584,7 +592,7 @@ void Menu::getTrainsByRouteByRouteDistanceByticketPriceCommand() const {
     std::cout << "Введіть дистанцію маршруту: ";
     std::cin >> distance;
     double price;
-    std::cout << "Введіть дистанцію маршруту: ";
+    std::cout << "Введіть ціну квитка: ";
     std::cin >> price;
 
     auto trains = services.getTrainsByRouteByRouteDistanceByticketPrice(id, distance, price);
@@ -675,7 +683,7 @@ void Menu::getSoldTicketsByRouteCommand() const {
 }
 void Menu::getSoldTicketsByRouteDistanceCommand() const {
     double distance;
-    std::cout << "Введіть id Маршруту: ";
+    std::cout << "Введіть довжину маршруту: ";
     std::cin >> distance;
     std::string from;
     std::cout << "Введіть ліву межу часового діапазону у форматі YYYY-MM-DD-HH:MM: ";
@@ -690,7 +698,7 @@ void Menu::getSoldTicketsByRouteDistanceCommand() const {
 }
 void Menu::getSoldTicketsByTicketPriceCommand() const {
     double price;
-    std::cout << "Введіть id Маршруту: ";
+    std::cout << "введіть ціну квитка: ";
     std::cin >> price;
     std::string from;
     std::cout << "Введіть ліву межу часового діапазону у форматі YYYY-MM-DD-HH:MM: ";
@@ -702,6 +710,8 @@ void Menu::getSoldTicketsByTicketPriceCommand() const {
     for (const auto& ticket : tickets) {
         std::cout << "Квиток: " << ticket->getId() <<  std::endl;
     }
+
+
 }
 
 void Menu::getRoutesByCategoryCommand() const {
@@ -790,10 +800,22 @@ void Menu::getPassengersByHasBaggageCommand() const {
 }
 void Menu::getPassengersBySexCommand() const {
     std::string sex;
-    std::cout << "Введіть Стать працівника (F or M): ";
+    std::cout << "Введіть Стать пасажира (F or M): ";
     std::cin >> sex;
 
     auto passengers = services.getPassengersBySex(sex == "M" ? SEX::MALE : SEX::FEMALE);
+    for (const auto& passenger : passengers) {
+        std::cout << "Пасажир: " <<  passenger->getId() << std::endl;
+    }
+    std::cout << "Кількість " << passengers.size() << std::endl;
+}
+
+void Menu::getPassengersByAgeCommand() const {
+    int age;
+    std::cout << "Введіть вік пасажира в роках: ";
+    std::cin >> age;
+
+    auto passengers = services.getPassengersByAge(age);
     for (const auto& passenger : passengers) {
         std::cout << "Пасажир: " <<  passenger->getId() << std::endl;
     }
