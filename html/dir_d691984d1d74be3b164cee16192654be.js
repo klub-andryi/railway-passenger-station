@@ -15,6 +15,7 @@ var dir_d691984d1d74be3b164cee16192654be =
     [ "passenger.hpp", "passenger_8hpp_source.html", null ],
     [ "position.hpp", "position_8hpp_source.html", null ],
     [ "route.hpp", "route_8hpp_source.html", null ],
+    [ "sex.hpp", "sex_8hpp_source.html", null ],
     [ "station.hpp", "station_8hpp_source.html", null ],
     [ "technician-brigade.hpp", "technician-brigade_8hpp_source.html", null ],
     [ "technician.hpp", "technician_8hpp_source.html", null ],

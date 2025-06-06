@@ -60,6 +60,9 @@ var hierarchy =
     [ "BaseRelation< TechnicianBrigade, Technician >", "class_base_relation.html", [
       [ "OneToMany< TechnicianBrigade, Technician >", "class_one_to_many.html", null ]
     ] ],
+    [ "BaseRelation< Ticket, Passenger >", "class_base_relation.html", [
+      [ "OneToOne< Ticket, Passenger >", "class_one_to_one.html", null ]
+    ] ],
     [ "BaseRelation< Train, Locomotive >", "class_base_relation.html", [
       [ "OneToOne< Train, Locomotive >", "class_one_to_one.html", null ]
     ] ],
@@ -125,9 +128,9 @@ var hierarchy =
     [ "EntitiesBuckets", "struct_entities_buckets.html", null ],
     [ "EntityFactory", "class_entity_factory.html", null ],
     [ "Math", "class_math.html", null ],
+    [ "Menu", "class_menu.html", null ],
     [ "Position", "class_position.html", null ],
-    [ "RelationMenu", "class_relation_menu.html", null ],
-    [ "RelationServices", "class_relation_services.html", null ],
+    [ "Services", "class_services.html", null ],
     [ "TicketStatus", "class_ticket_status.html", null ],
     [ "TripStatus", "class_trip_status.html", null ],
     [ "WeakEqual", "struct_weak_equal.html", null ],

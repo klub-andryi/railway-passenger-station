@@ -12,5 +12,6 @@ var searchData=
   ['onetoone_9',['OneToOne',['../class_one_to_one.html',1,'']]],
   ['onetoone_3c_20department_2c_20headdepartment_20_3e_10',['OneToOne&lt; Department, HeadDepartment &gt;',['../class_one_to_one.html',1,'']]],
   ['onetoone_3c_20locomotivebrigade_2c_20locomotive_20_3e_11',['OneToOne&lt; LocomotiveBrigade, Locomotive &gt;',['../class_one_to_one.html',1,'']]],
-  ['onetoone_3c_20train_2c_20locomotive_20_3e_12',['OneToOne&lt; Train, Locomotive &gt;',['../class_one_to_one.html',1,'']]]
+  ['onetoone_3c_20ticket_2c_20passenger_20_3e_12',['OneToOne&lt; Ticket, Passenger &gt;',['../class_one_to_one.html',1,'']]],
+  ['onetoone_3c_20train_2c_20locomotive_20_3e_13',['OneToOne&lt; Train, Locomotive &gt;',['../class_one_to_one.html',1,'']]]
 ];
