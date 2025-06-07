@@ -491,7 +491,7 @@ Services::getLocomotivesAtStationInTime(
 
                 if (start_station->getId() == id)
                 {
-                    if (Date::differenceInMinutes(departure_time, time) <= 1)
+                    if (abs(Date::differenceInMinutes(departure_time, time)) <= 1)
                     {
                         result.push_back(loco);
                     }
@@ -502,7 +502,7 @@ Services::getLocomotivesAtStationInTime(
                 Date arrival_time = calculateArrivalTime(
                     departure_time, stations, start_index, id, speed, *trip);
 
-                if (Date::differenceInMinutes(arrival_time, time) <= 1)
+                if (abs(Date::differenceInMinutes(arrival_time, time)) <= 1)
                 {
                     result.push_back(loco);
                 }
@@ -587,21 +587,20 @@ Services::getLocomotivesArrivalTimeAtStation(const std::string &station_id) cons
 std::vector<std::shared_ptr<Locomotive>> Services::getLocomotiveByPassedTechInsp(
     const Date &from, const Date &to) const
 {
-    const auto locomotives = locomotive_repository.getAll();
     std::vector<std::shared_ptr<Locomotive>> result;
 
-    for (const auto &loco : locomotives)
+    for (const auto &loco : locomotive_repository.getAll())
     {
-        const auto &inspections = loco->getPassedTechInspection();
-        for (const auto &date : inspections)
+        for (const auto &date : loco->getPassedTechInspection())
         {
-            if (Date::differenceInMinutes(date, from) >= 0 && Date::differenceInMinutes(to, date) >= 0)
+            if (Date::isInRange(date, from, to))
             {
                 result.push_back(loco);
                 break;
             }
         }
     }
+
     return result;
 }
 
@@ -616,7 +615,7 @@ std::vector<std::shared_ptr<Locomotive>> Services::getLocomotiveByRepairInTime(
         const auto &repairs = loco->getRepairs();
         for (const auto &date : repairs)
         {
-            if (Date::differenceInMinutes(repair_date, date) == 0)
+            if (Date::isSameDay(repair_date, date))
             {
                 result.push_back(loco);
                 break;
@@ -988,7 +987,8 @@ std::vector<std::shared_ptr<Trip>> Services::getDelayedTripsByRoute(
 
 std::vector<std::shared_ptr<Ticket>> Services::getSoldTicketsByRoute(
     const std::string &id,
-    const Date &start, const Date &end) const
+    const Date &start,
+    const Date &end) const
 {
     const auto route = route_repository.findById(id);
     const auto trips = route_to_trips.getLinkedB(route);
@@ -999,32 +999,29 @@ std::vector<std::shared_ptr<Ticket>> Services::getSoldTicketsByRoute(
 
     for (const auto &trip : trips)
     {
-        auto departure = trip->getDepartureTime();
+        Date departure = trip->getDepartureTime();
         if (trip->getTripStatus() == Status::Delayed)
         {
             departure.addHours(trip->getDelayTime().getHour());
             departure.addMinutes(trip->getDelayTime().getMinute());
         }
-        if (
-            Date::differenceInMinutes(departure, start) >= 0 &&
-            Date::differenceInMinutes(end, departure) >= 0)
-        {
-            int sold_for_trip = 0;
-            for (const auto &ticket : trip_to_tickets.getLinkedB(trip))
-            {
-                if (ticket->getPurchasedAt().isTimeOnly())
-                {
-                    continue;
-                }
 
-                all_sold_tickets.push_back(ticket);
-                sold_for_trip++;
+        int sold_for_trip = 0;
+
+        for (const auto &ticket : trip_to_tickets.getLinkedB(trip))
+        {
+            if (ticket->getPurchasedAt().isTimeOnly() || !Date::isInRange(ticket->getPurchasedAt(), start, end)) {
+                continue;
             }
-            if (sold_for_trip > 0)
-            {
-                total_sold_tickets += sold_for_trip;
-                trip_count++;
-            }
+            
+            all_sold_tickets.push_back(ticket);
+            sold_for_trip++;
+        }
+
+        if (sold_for_trip > 0)
+        {
+            total_sold_tickets += sold_for_trip;
+            trip_count++;
         }
     }
 
@@ -1032,7 +1029,7 @@ std::vector<std::shared_ptr<Ticket>> Services::getSoldTicketsByRoute(
                          ? static_cast<double>(total_sold_tickets) / trip_count
                          : 0.0;
 
-    std::cout << "Average sold tickets per trip: " << average << std::endl;
+    std::cout << "Середня кількість проданих квитків: " << average << std::endl;
 
     return all_sold_tickets;
 }
@@ -1048,7 +1045,7 @@ std::vector<std::shared_ptr<Ticket>> Services::getSoldTicketsByRouteDistance(
     {
         const auto &stations = routes_to_stations.getLinkedB(route);
         double dist = 0;
-        for (size_t i = 0; i + 1 < stations.size(); ++i)
+        for (size_t i = 0; i < stations.size() - 1; ++i)
         {
             dist += Math::getDistanceBetweenPointsKm(
                 stations[i]->getPosition(),
@@ -1061,7 +1058,7 @@ std::vector<std::shared_ptr<Ticket>> Services::getSoldTicketsByRouteDistance(
         }
     }
 
-    std::vector<std::shared_ptr<Ticket>> result;
+    std::vector<std::shared_ptr<Ticket>> all_sold_tickets;
     int total_sold = 0;
     int trip_count = 0;
 
@@ -1071,44 +1068,41 @@ std::vector<std::shared_ptr<Ticket>> Services::getSoldTicketsByRouteDistance(
 
         for (const auto &trip : trips)
         {
-            auto departure = trip->getDepartureTime();
+            Date departure = trip->getDepartureTime();
             if (trip->getTripStatus() == Status::Delayed)
             {
                 departure.addHours(trip->getDelayTime().getHour());
                 departure.addMinutes(trip->getDelayTime().getMinute());
             }
 
-            if (
-                Date::differenceInMinutes(departure, start) >= 0 &&
-                Date::differenceInMinutes(end, departure) >= 0)
+            int sold_for_trip = 0;
+
+            for (const auto &ticket : trip_to_tickets.getLinkedB(trip))
             {
-                int sold = 0;
-                for (const auto &ticket : trip_to_tickets.getLinkedB(trip))
+                if (ticket->getPurchasedAt().isTimeOnly() || !Date::isInRange(ticket->getPurchasedAt(), start, end))
                 {
-                    if (!ticket->getPurchasedAt().isTimeOnly())
-                    {
-                        result.push_back(ticket);
-                        sold++;
-                    }
+                    continue;
                 }
 
-                total_sold += sold;
+                all_sold_tickets.push_back(ticket);
+                sold_for_trip++;
+            }
+
+            if (sold_for_trip > 0)
+            {
+                total_sold += sold_for_trip;
                 trip_count++;
             }
         }
     }
 
-    if (trip_count > 0)
-    {
-        double average = static_cast<double>(total_sold) / trip_count;
-        std::cout << "Середня кількість проданих квитків на рейс: " << average << std::endl;
-    }
-    else
-    {
-        std::cout << "Рейсів з довжиною " << distance << " км не знайдено у вказаний інтервал." << std::endl;
-    }
+    double average = trip_count > 0
+                         ? static_cast<double>(total_sold) / trip_count
+                         : 0.0;
 
-    return result;
+    std::cout << "Середня кількість проданих квитків на рейс: " << average << std::endl;
+
+    return all_sold_tickets;
 }
 
 std::vector<std::shared_ptr<Ticket>>
@@ -1121,13 +1115,10 @@ Services::getSoldTicketByTicketPrice(
 
     for (const auto &ticket : all_tickets)
     {
-        if (
-            Date::differenceInMinutes(ticket->getPurchasedAt(), start) >= 0 &&
-            Date::differenceInMinutes(end, ticket->getPurchasedAt()) >= 0 &&
-            ticket->getPrice() == price)
-        {
-            result.push_back(ticket);
+        if (ticket->getPurchasedAt().isTimeOnly() || !Date::isInRange(ticket->getPurchasedAt(), start, end) || ticket->getPrice() != price) {
+            continue;
         }
+        result.push_back(ticket);
     }
 
     return result;
@@ -1156,9 +1147,10 @@ std::vector<std::shared_ptr<Ticket>> Services::getUnredeemedTicketByRoute(
 {
     const auto route = route_repository.findById(id);
     const auto trips = route_to_trips.getLinkedB(route);
-    std::vector<std::shared_ptr<Ticket>> result;
 
+    std::vector<std::shared_ptr<Ticket>> result;
     std::vector<std::shared_ptr<Ticket>> tickets;
+
     for (const auto &trip : trips)
     {
         for (const auto &ticket : trip_to_tickets.getLinkedB(trip))
@@ -1185,14 +1177,7 @@ std::vector<std::shared_ptr<Ticket>> Services::getUnredeemedTicketByDate(
     const auto all_tickets = ticket_repository.getAll();
     for (const auto &ticket : all_tickets)
     {
-        if (ticket->getPurchasedAt().isTimeOnly())
-        {
-            result.push_back(ticket);
-        }
-        else if (
-            ticket->getPurchasedAt().getYear() != date.getYear() ||
-            ticket->getPurchasedAt().getMonth() != date.getMonth() ||
-            ticket->getPurchasedAt().getDay() != date.getDay())
+        if (ticket->getPurchasedAt().isTimeOnly() || Date::isSameDay(ticket->getPurchasedAt(), date))
         {
             result.push_back(ticket);
         }
@@ -1221,9 +1206,7 @@ std::vector<std::shared_ptr<Ticket>> Services::getReturnedTicketsForAllDelayedTr
         const auto tickets = trip_to_tickets.getLinkedB(trip);
         for (const auto& ticket : tickets)
         {
-            if (ticket->getStatus() &&
-                Date::differenceInMinutes(departure_time_delay, ticket->getReturnedAt()) >= 0 &&
-                Date::differenceInMinutes(ticket->getReturnedAt(), departure_time) >= 0)
+            if (ticket->getStatus() && Date::isInRange(ticket->getReturnedAt(), departure_time, departure_time_delay))
             {
                 result.push_back(ticket);
             }
@@ -1296,7 +1279,7 @@ std::vector<std::shared_ptr<Passenger>> Services::getPassengersByLeft(
             continue;
         }
         const auto trip = trip_to_tickets.getLinkedA(ticket);
-        if (trip->getDepartureTime().getDay() == date.getDay())
+        if (Date::isSameDay(trip->getDepartureTime(), date))
         {
             result.push_back(passanger);
         }
@@ -1320,7 +1303,7 @@ std::vector<std::shared_ptr<Passenger>> Services::getPassengersByLeftForeign(
         }
         const auto trip = trip_to_tickets.getLinkedA(ticket);
         const auto route = route_to_trips.getLinkedA(trip);
-        if (trip->getDepartureTime().getDay() == date.getDay() && route->getTypeRoute() == TypeRoute::International)
+        if (Date::isSameDay(trip->getDepartureTime(), date) && route->getTypeRoute() == TypeRoute::International)
         {
             result.push_back(passanger);
         }
@@ -1380,23 +1363,11 @@ std::vector<std::shared_ptr<Ticket>> Services::getReturnedTicketsByTrip(const st
     std::vector<std::shared_ptr<Ticket>> result;
     const auto trip = trip_repository.findById(id);
 
-    if (trip->getTripStatus() != Status::Delayed)
-    {
-        return result;
-    }
-    auto departure_time = trip->getDepartureTime();
-
-    auto departure_time_delay = departure_time;
-    departure_time_delay.addHours(trip->getDelayTime().getHour());
-    departure_time_delay.addMinutes(trip->getDelayTime().getMinute());
-
     const auto tickets = trip_to_tickets.getLinkedB(trip);
     for (const auto &ticket : tickets)
     {
 
-        if (ticket->getStatus() &&
-            Date::differenceInMinutes(departure_time_delay, ticket->getReturnedAt()) >= 0 &&
-            Date::differenceInMinutes(ticket->getReturnedAt(), departure_time) >= 0)
+        if (ticket->getStatus())
         {
             result.push_back(ticket);
         }
@@ -1411,17 +1382,9 @@ std::vector<std::shared_ptr<Ticket>> Services::getReturnedTicketsByDate(const Da
 
     for (const auto& ticket : all_tickets)
     {
-       if (ticket->getStatus())
+       if (ticket->getStatus() && Date::isSameDay(date, ticket->getReturnedAt()))
        {
-           if (
-            ticket->getReturnedAt().getYear() == date.getYear() &&
-            ticket->getReturnedAt().getMonth() == date.getMonth() &&
-            ticket->getReturnedAt().getDay() == date.getDay()
-           )
-           {
-                result.push_back(ticket);
-           }
-            
+           result.push_back(ticket);
        }
        
     }
@@ -1439,23 +1402,11 @@ std::vector<std::shared_ptr<Ticket>> Services::getReturnedTicketsByRoute(const s
 
     for (const auto& trip : trips)
     {
-        if (trip->getTripStatus() != Status::Delayed)
-        {
-            return result;
-        }
-        auto departure_time = trip->getDepartureTime();
-
-        auto departure_time_delay = departure_time;
-        departure_time_delay.addHours(trip->getDelayTime().getHour());
-        departure_time_delay.addMinutes(trip->getDelayTime().getMinute());
-
         const auto tickets = trip_to_tickets.getLinkedB(trip);
         for (const auto &ticket : tickets)
         {
 
-            if (ticket->getStatus() &&
-                Date::differenceInMinutes(departure_time_delay, ticket->getReturnedAt()) >= 0 &&
-                Date::differenceInMinutes(ticket->getReturnedAt(), departure_time) >= 0)
+            if (ticket->getStatus())
             {
                 result.push_back(ticket);
             }
