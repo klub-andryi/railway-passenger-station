@@ -2,8 +2,6 @@
 #include "services/services.hpp"
 #include "ui/menu.hpp"
 
-// #include "common/date/date.hpp"
-
 int main()
 {
     SetConsoleOutputCP(CP_UTF8);
