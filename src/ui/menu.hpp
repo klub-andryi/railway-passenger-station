@@ -33,6 +33,7 @@ private:
 
     void getLocomotivesByStationCommand() const;
     void getLocomotivesAtStationInTimeCommand() const;
+    void getLocomotivesArrivalTimeAtStationCommand() const;
     void getLocomotivesByCompletedRoutesCommand() const;
     
     void getLocomotiveByPassedTechInspCommand() const;

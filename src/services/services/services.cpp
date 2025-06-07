@@ -485,10 +485,6 @@ Services::getLocomotivesAtStationInTime(
 
                 int start_index = findStationIndex(stations, start_station->getId());
 
-
-                if (start_index == -1)
-                    continue;
-
                 if (start_station->getId() == id)
                 {
                     if (abs(Date::differenceInMinutes(departure_time, time)) <= 1)
@@ -537,8 +533,11 @@ std::vector<std::shared_ptr<Locomotive>> Services::getLocomotivesByCompletedRout
 std::vector<std::pair<std::shared_ptr<Locomotive>, Date>>
 Services::getLocomotivesArrivalTimeAtStation(const std::string &station_id) const
 {
+
+
     auto station = station_repository.findById(station_id);
     auto routes = routes_to_stations.getLinkedA(station);
+
     std::vector<std::pair<std::shared_ptr<Locomotive>, Date>> result;
 
     for (const auto &route : routes)
@@ -556,13 +555,12 @@ Services::getLocomotivesArrivalTimeAtStation(const std::string &station_id) cons
             }
 
             auto locomotives = locomotives_to_trips.getLinkedA(trip);
-
             for (const auto &loco : locomotives)
             {
                 auto train = train_to_locomotive.getLinkedA(loco);
                 auto start_station = station_to_locomotives.getLinkedA(loco);
-
                 int start_index = findStationIndex(stations, start_station->getId());
+
                 if (start_index == -1)
                     continue;
 
@@ -571,11 +569,9 @@ Services::getLocomotivesArrivalTimeAtStation(const std::string &station_id) cons
                     result.emplace_back(loco, departure_time);
                     continue;
                 }
-
                 double speed = static_cast<double>(train->getTrainType());
                 Date arrival_time = calculateArrivalTime(
                     departure_time, stations, start_index, station_id, speed, *trip);
-
                 result.emplace_back(loco, arrival_time);
             }
         }
@@ -589,9 +585,11 @@ std::vector<std::shared_ptr<Locomotive>> Services::getLocomotiveByPassedTechInsp
 {
     std::vector<std::shared_ptr<Locomotive>> result;
 
-    for (const auto &loco : locomotive_repository.getAll())
+    const auto locomotives = locomotive_repository.getAll();
+    for (const auto &loco : locomotives)
     {
-        for (const auto &date : loco->getPassedTechInspection())
+        const auto dates = loco->getPassedTechInspection();
+        for (const auto &date : dates)
         {
             if (Date::isInRange(date, from, to))
             {
@@ -810,10 +808,7 @@ std::vector<std::shared_ptr<Train>> Services::getTrainsByticketPrice(
     for (const auto &loco : unique_locomotives)
     {
         auto train = train_to_locomotive.getLinkedA(loco);
-        if (train)
-        {
-            result.push_back(train);
-        }
+        result.push_back(train);
     }
 
     return result;
@@ -909,9 +904,6 @@ std::vector<std::shared_ptr<Trip>> Services::getTripsByTwoStationsInOrder(
     for (const auto &trip : all_trips)
     {
         auto route = getRouteByTrip(trip->getId());
-        if (!route)
-            continue;
-
         auto stations = routes_to_stations.getLinkedB(route);
 
         int indexA = -1;
@@ -925,7 +917,7 @@ std::vector<std::shared_ptr<Trip>> Services::getTripsByTwoStationsInOrder(
                 indexB = static_cast<int>(i);
         }
 
-        if (indexA != -1 && indexB != -1 && indexA < indexB)
+        if (indexA != -1 && indexB != -1 && indexA < indexB && trip->getTripStatus() == Status::Canceled)
         {
             result.push_back(trip);
         }
@@ -1177,7 +1169,12 @@ std::vector<std::shared_ptr<Ticket>> Services::getUnredeemedTicketByDate(
     const auto all_tickets = ticket_repository.getAll();
     for (const auto &ticket : all_tickets)
     {
-        if (ticket->getPurchasedAt().isTimeOnly() || Date::isSameDay(ticket->getPurchasedAt(), date))
+        if (ticket->getPurchasedAt().isTimeOnly())
+        {
+            result.push_back(ticket);
+            continue;
+        }
+        if (!Date::isSameDay(ticket->getPurchasedAt(), date))
         {
             result.push_back(ticket);
         }

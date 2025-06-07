@@ -161,6 +161,11 @@ int main()
     auto train6 = std::make_shared<Train>(generateId(), TrainType(TrainType::PASSANGERS));
     auto train7 = std::make_shared<Train>(generateId(), TrainType(TrainType::FAST));
     auto train8 = std::make_shared<Train>(generateId(), TrainType(TrainType::PASSANGERS));
+    auto train9 = std::make_shared<Train>(generateId(), TrainType(TrainType::PASSANGERS));
+    auto train10 = std::make_shared<Train>(generateId(), TrainType(TrainType::PASSANGERS));
+    auto train11 = std::make_shared<Train>(generateId(), TrainType(TrainType::PASSANGERS));
+    auto train12 = std::make_shared<Train>(generateId(), TrainType(TrainType::PASSANGERS));
+    auto train13 = std::make_shared<Train>(generateId(), TrainType(TrainType::PASSANGERS));
 
     auto passenger1 = std::make_shared<Passenger>(generateId(), false, SEX(SEX::FEMALE), Date(1988, 10, 20));
     auto passenger2 = std::make_shared<Passenger>(generateId(), true, SEX(SEX::MALE), Date(2001, 12, 1));
@@ -294,6 +299,7 @@ int main()
     department_to_employee.link(department1, staff25);
     department_to_employee.link(department1, staff26);
 
+    department_to_employee.link(department2, head2);
     department_to_employee.link(department2, cashier4);
     department_to_employee.link(department2, cashier5);
     department_to_employee.link(department2, dispatcher3);
@@ -341,7 +347,7 @@ int main()
     tech_brigade_to_locomotives.link(tech_brigade2, loco10);
     tech_brigade_to_locomotives.link(tech_brigade2, loco11);
     tech_brigade_to_locomotives.link(tech_brigade2, loco12);
-    tech_brigade_to_locomotives.link(tech_brigade2, loco3);
+    tech_brigade_to_locomotives.link(tech_brigade2, loco13);
 
     OneToMany<TechnicianBrigade, Technician> tech_brigade_to_technician;
     tech_brigade_to_technician.link(tech_brigade1, tech1);
@@ -353,7 +359,7 @@ int main()
     tech_brigade_to_technician.link(tech_brigade2, tech7);
     tech_brigade_to_technician.link(tech_brigade2, tech8);
 
-    OneToMany<LocomotiveBrigade, Locomotive> locomotive_brigade_to_locomotive;
+    OneToOne<LocomotiveBrigade, Locomotive> locomotive_brigade_to_locomotive;
     locomotive_brigade_to_locomotive.link(loco_brigade1, loco1);
     locomotive_brigade_to_locomotive.link(loco_brigade2, loco2);
     locomotive_brigade_to_locomotive.link(loco_brigade3, loco3);
@@ -560,9 +566,15 @@ int main()
     trains_to_locomotive.link(train2, loco2);
     trains_to_locomotive.link(train3, loco3);
     trains_to_locomotive.link(train4, loco4);
+    trains_to_locomotive.link(train5, loco5);
     trains_to_locomotive.link(train6, loco6);
     trains_to_locomotive.link(train7, loco7);
     trains_to_locomotive.link(train8, loco8);
+    trains_to_locomotive.link(train9, loco9);
+    trains_to_locomotive.link(train10, loco10);
+    trains_to_locomotive.link(train11, loco11);
+    trains_to_locomotive.link(train12, loco12);
+    trains_to_locomotive.link(train13, loco13);
 
     OneToMany<Trip, Ticket> trip_to_tickets;
     trip_to_tickets.link(trip_if_kharkiv_m, ticket_if_kharkiv_m1);
@@ -679,7 +691,8 @@ int main()
                         route_krakow_if, trip_krakow_if_m, trip_krakow_if_e,
                         route_odesa_zhyt, trip_odesa_zhyt_m, trip_odesa_zhyt_e,
 
-                        train1, train2, train3, train4, train5, train6, train7, train8,
+                        train1, train2, train3, train4, train5, train6, train7, train8, train9,
+                        train10, train11, train12, train13,
 
                         passenger1, passenger2, passenger3, passenger4, passenger5, passenger6,
                         passenger7, passenger8, passenger9, passenger10, passenger11, passenger12,
